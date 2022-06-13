@@ -1,35 +1,41 @@
 ﻿@page "/fetchdata"
+@using BlazorAirQuality.DTOs
 @inject HttpClient Http
 
-<PageTitle>Weather forecast</PageTitle>
+<PageTitle>Air Quality of various countries</PageTitle>
 
-<h1>Weather forecast</h1>
+<h1>Air Quality of various countries</h1>
 
-<p>This component demonstrates fetching data from the server.</p>
+<p>Encourage air quality</p>
 
-@if (forecasts == null)
+@if (airQualities == null)
 {
-    <p><em>Loading...</em></p>
+    <div class="d-flex justify-content-center">
+      <div class="spinner-border" role="status">
+      </div>
+    </div>
 }
 else
 {
-    <table class="table">
+    <table class="table table-striped table-hover">
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Temp. (C)</th>
-                <th>Temp. (F)</th>
-                <th>Summary</th>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Count</th>
+                <th>Locations</th>
+                <th>LastUpdated</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var forecast in forecasts)
+            @foreach (var aq in airQualities)
             {
                 <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
+                    <td>@aq.Code</td>
+                    <td>@aq.Name</td>
+                    <td>@aq.Count</td>
+                    <td>@aq.Locations</td>
+                    <td>@aq.LastUpdated</td>
                 </tr>
             }
         </tbody>
@@ -37,21 +43,18 @@ else
 }
 
 @code {
-    private WeatherForecast[]? forecasts;
+    private AirQuality[]? airQualities;
 
     protected override async Task OnInitializedAsync()
     {
-        forecasts = await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
-    }
-
-    public class WeatherForecast
-    {
-        public DateTime Date { get; set; }
-
-        public int TemperatureC { get; set; }
-
-        public string? Summary { get; set; }
-
-        public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+        try
+        {
+            var result = await Http.GetFromJsonAsync<Response>("https://api.openaq.org/v2/countries?limit=200&page=1&offset=0&sort=asc&order_by=country");
+            airQualities = result.Results;
+        }   
+        catch(Exception e)
+        {
+            Console.WriteLine("Error : ", e);    
+        }     
     }
 }
